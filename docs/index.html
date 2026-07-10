@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Temporal demos | ICS MEDIA</title>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Temporal demos</h1>
+      <p class="lead">
+        Three demos showing how to use the standard date-time API "Temporal". Sample code for the article on migrating from <code>Date</code> to <code>Temporal</code>.
+      </p>
+      <ul class="cards">
+        <li>
+          <a href="01_reservation/">
+            <h2>01. Reservation date-time handling</h2>
+            <p>
+              Build a confirmed date-time from a reservation date, start time, duration, and store time zone, then convert it to an overseas display time zone.
+            </p>
+          </a>
+        </li>
+        <li>
+          <a href="02_clock-instant/">
+            <h2>02. Wall clock vs. exact instant</h2>
+            <p>
+              Compare a Plain value with no time zone against a ZonedDateTime that maps to a unique instant, shown across several cities.
+            </p>
+          </a>
+        </li>
+        <li>
+          <a href="03_dst/">
+            <h2>03. Adding across a DST transition</h2>
+            <p>
+              See how addition handles a Daylight Saving Time switch where a wall-clock time does not exist.
+            </p>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

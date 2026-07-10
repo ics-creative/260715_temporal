@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adding across a DST transition | Temporal demo</title>
+    <link rel="stylesheet" href="../base.css" />
+  </head>
+  <body>
+    <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
+    <div class="wrap">
+      <h1>Adding across a DST transition</h1>
+      <p class="lead">
+        In London, the clocks jump from 01:00 to 02:00 on 29 March 2026, so the 01:00 hour does not exist that day. This demo shows how <code>ZonedDateTime</code> handles addition across that switch.
+      </p>
+
+      <p id="unsupported" class="note" hidden>
+        This browser does not support Temporal. Please use Chrome / Edge 144+ or Firefox 139+.
+      </p>
+
+      <div class="panel">
+        <div class="field">
+          <label for="base">Start date-time (Europe/London)</label>
+          <input type="datetime-local" id="base" value="2026-03-29T00:30" />
+        </div>
+        <div class="field">
+          <label for="hours">Hours to add</label>
+          <select id="hours">
+            <option value="1" selected>1 hour</option>
+            <option value="2">2 hours</option>
+            <option value="3">3 hours</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <dl class="result">
+          <dt>Before</dt>
+          <dd id="out-base"></dd>
+          <dt>Naive expectation</dt>
+          <dd id="out-naive"></dd>
+          <dt>Actual result</dt>
+          <dd id="out-result" class="big"></dd>
+        </dl>
+        <p class="note" id="dst-note"></p>
+      </div>
+    </div>
+
+    <script type="module">
+      const unsupported = document.getElementById("unsupported");
+      if (typeof Temporal === "undefined") {
+        unsupported.hidden = false;
+      } else {
+        const TZ = "Europe/London";
+        const $ = (id) => document.getElementById(id);
+        const inputs = [$("base"), $("hours")];
+
+        const wall = (zdt) =>
+          zdt.toPlainDateTime().toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
+
+        const update = () => {
+          let base;
+          try {
+            base = Temporal.PlainDateTime.from($("base").value).toZonedDateTime(TZ);
+          } catch {
+            return;
+          }
+          const hours = Number($("hours").value);
+          const result = base.add({ hours });
+
+          // A naive addition that ignores the time zone (can land on a non-existent time)
+          const naive = base.toPlainDateTime().add({ hours });
+          const naiveText = naive.toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
+
+          $("out-base").textContent = `${wall(base)} (UTC${base.offset})`;
+          $("out-naive").textContent = naiveText;
+          $("out-result").textContent = `${wall(result)} (UTC${result.offset})`;
+
+          const crossed = base.offset !== result.offset;
+          const skipped = !result.toPlainDateTime().equals(naive);
+          if (crossed || skipped) {
+            $("dst-note").textContent =
+              `This addition crosses a DST transition. The naive result ${naiveText} does not exist, so it is adjusted to ${wall(result)}, and the offset shifts from UTC${base.offset} to UTC${result.offset}.`;
+          } else {
+            $("dst-note").textContent =
+              "This addition does not cross a DST transition.";
+          }
+        };
+
+        for (const el of inputs) el.addEventListener("input", update);
+        update();
+      }
+    </script>
+  </body>
+</html>
