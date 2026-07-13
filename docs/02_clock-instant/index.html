@@ -3,54 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Wall clock vs. exact instant | Temporal demo</title>
+    <title>World clock | Temporal demo</title>
     <link rel="stylesheet" href="../base.css" />
   </head>
   <body>
     <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
     <div class="wrap">
-      <h1>Wall clock vs. exact instant</h1>
-      <p class="lead">
-        A wall-clock face with no time zone (<code>PlainDateTime</code>) becomes an exact point in time (<code>ZonedDateTime</code>) once you attach a time zone. Below, a single instant is shown in the local time of several cities at once.
-      </p>
+      <h1>World clock</h1>
+      <p class="lead">One instant, shown as each city's local time.</p>
 
       <p id="unsupported" class="note" hidden>
         This browser does not support Temporal. Please use Chrome / Edge 144+ or Firefox 139+.
       </p>
 
       <div class="panel">
-        <div class="field">
-          <label for="wall">Wall-clock value (no time zone)</label>
-          <input type="datetime-local" id="wall" value="2026-07-10T14:30" />
-        </div>
-        <div class="field">
-          <label for="sourceTz">Which region's local time this represents</label>
-          <select id="sourceTz">
-            <option value="Asia/Tokyo" selected>Asia/Tokyo</option>
-            <option value="Europe/London">Europe/London</option>
-            <option value="America/New_York">America/New_York</option>
-            <option value="America/Los_Angeles">America/Los_Angeles</option>
-          </select>
-        </div>
-        <p class="note">
-          The wall-clock value alone does not tell you which region's 14:30 it is. Only after attaching a time zone does it become a unique instant on Earth.
-        </p>
-      </div>
-
-      <div class="panel">
-        <p style="margin-bottom: 0.75rem">
-          <span class="badge">Exact instant</span> the same moment in each city's local time
-        </p>
-        <dl class="result" id="cities"></dl>
+        <dl class="result" id="clocks"></dl>
       </div>
     </div>
 
     <script type="module">
-      const unsupported = document.getElementById("unsupported");
-      if (typeof Temporal === "undefined") {
-        unsupported.hidden = false;
-      } else {
-        const CITIES = [
+      main();
+
+      function main() {
+        if (typeof Temporal === "undefined") {
+          document.getElementById("unsupported").hidden = false;
+          return;
+        }
+
+        const clocks = document.getElementById("clocks");
+        const cities = [
           ["Tokyo", "Asia/Tokyo"],
           ["London", "Europe/London"],
           ["Paris", "Europe/Paris"],
@@ -58,43 +39,34 @@
           ["Los Angeles", "America/Los_Angeles"],
           ["UTC", "UTC"],
         ];
-        const wallEl = document.getElementById("wall");
-        const sourceEl = document.getElementById("sourceTz");
-        const citiesEl = document.getElementById("cities");
-
-        const update = () => {
-          let zdt;
-          try {
-            zdt = Temporal.PlainDateTime.from(wallEl.value).toZonedDateTime(
-              sourceEl.value,
-            );
-          } catch {
-            return;
-          }
-          const instant = zdt.toInstant();
-
-          citiesEl.replaceChildren();
-          for (const [name, tz] of CITIES) {
-            const local = instant.toZonedDateTimeISO(tz);
-            const dt = document.createElement("dt");
-            dt.textContent = name;
-            const dd = document.createElement("dd");
-            dd.textContent = local.toLocaleString("en-US", {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              timeZoneName: "short",
-            });
-            if (tz === sourceEl.value) {
-              dd.classList.add("big");
-            }
-            citiesEl.append(dt, dd);
-          }
+        const options = {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          timeZoneName: "short",
         };
 
-        for (const el of [wallEl, sourceEl]) el.addEventListener("input", update);
-        update();
+        const cells = new Map();
+        for (const [name, tz] of cities) {
+          const label = document.createElement("dt");
+          label.textContent = name;
+          const value = document.createElement("dd");
+          value.classList.add("mono");
+          clocks.append(label, value);
+          cells.set(tz, value);
+        }
+
+        function tick() {
+          const now = Temporal.Now.instant();
+          for (const [name, tz] of cities) {
+            cells.get(tz).textContent = now
+              .toZonedDateTimeISO(tz)
+              .toLocaleString("en-US", options);
+          }
+        }
+
+        tick();
+        setInterval(tick, 1000);
       }
     </script>
   </body>

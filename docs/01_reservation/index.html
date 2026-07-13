@@ -3,16 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reservation date-time handling | Temporal demo</title>
+    <title>Salon reservation | Temporal demo</title>
     <link rel="stylesheet" href="../base.css" />
   </head>
   <body>
     <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
     <div class="wrap">
-      <h1>Reservation date-time handling</h1>
-      <p class="lead">
-        Build a confirmed date-time (<code>ZonedDateTime</code>) from a reservation date, start time, duration, and the store's time zone. For overseas users, the same instant is also shown in another time zone.
-      </p>
+      <h1>Salon reservation</h1>
+      <p class="lead">The confirmed time works across time zones.</p>
 
       <p id="unsupported" class="note" hidden>
         This browser does not support Temporal. Please use Chrome / Edge 144+ or Firefox 139+.
@@ -20,129 +18,111 @@
 
       <div class="panel">
         <div class="field">
-          <label for="date">Reservation date</label>
+          <label for="store">Store</label>
+          <select id="store">
+            <option value="Asia/Tokyo" selected>Tokyo</option>
+            <option value="Europe/London">London</option>
+            <option value="America/New_York">New York</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
           <input type="date" id="date" value="2026-07-10" />
         </div>
         <div class="field">
-          <label for="time">Start time</label>
+          <label for="time">Start</label>
           <input type="time" id="time" value="14:00" />
         </div>
         <div class="field">
-          <label for="duration">Duration</label>
-          <select id="duration">
-            <option value="30">30 min</option>
-            <option value="60">60 min</option>
-            <option value="90" selected>90 min</option>
-            <option value="120">120 min</option>
+          <label for="course">Course</label>
+          <select id="course">
+            <option value="60">Relax (60 min)</option>
+            <option value="90" selected>Standard (90 min)</option>
+            <option value="120">Premium (120 min)</option>
           </select>
         </div>
         <div class="field">
-          <label for="storeTz">Store time zone</label>
-          <select id="storeTz">
-            <option value="Asia/Tokyo" selected>Asia/Tokyo</option>
-            <option value="Europe/London">Europe/London</option>
-            <option value="Europe/Paris">Europe/Paris</option>
-            <option value="America/New_York">America/New_York</option>
-            <option value="America/Los_Angeles">America/Los_Angeles</option>
-            <option value="UTC">UTC</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="viewTz">Display time zone (for overseas users)</label>
-          <select id="viewTz">
-            <option value="auto" selected>Current location (auto)</option>
-            <option value="Asia/Tokyo">Asia/Tokyo</option>
-            <option value="America/New_York">America/New_York</option>
-            <option value="Europe/London">Europe/London</option>
-            <option value="America/Los_Angeles">America/Los_Angeles</option>
-            <option value="UTC">UTC</option>
+          <label for="viewer">Your time zone</label>
+          <select id="viewer">
+            <option value="auto" selected>Auto (your location)</option>
+            <option value="Asia/Tokyo">Tokyo</option>
+            <option value="America/New_York">New York</option>
+            <option value="Europe/London">London</option>
           </select>
         </div>
       </div>
 
       <div class="panel">
         <dl class="result">
-          <dt>Duration</dt>
-          <dd id="out-duration" class="big"></dd>
-          <dt>Confirmed (store)</dt>
-          <dd id="out-reserved"></dd>
-          <dt>ISO string</dt>
-          <dd id="out-reserved-iso" class="mono"></dd>
-          <dt>Display time zone</dt>
-          <dd id="out-view"></dd>
-          <dt>ISO string</dt>
-          <dd id="out-view-iso" class="mono"></dd>
+          <dt>Store</dt>
+          <dd id="out-store"></dd>
+          <dt>Booking</dt>
+          <dd id="out-booking" class="big"></dd>
+          <dt>Confirmed (ISO)</dt>
+          <dd id="out-iso" class="mono"></dd>
+          <dt>Your local time</dt>
+          <dd id="out-local"></dd>
         </dl>
       </div>
-
-      <details>
-        <summary>Code for this demo</summary>
-        <pre id="code"></pre>
-      </details>
     </div>
 
     <script type="module">
-      const unsupported = document.getElementById("unsupported");
-      if (typeof Temporal === "undefined") {
-        unsupported.hidden = false;
-      } else {
-        const $ = (id) => document.getElementById(id);
-        const inputs = ["date", "time", "duration", "storeTz", "viewTz"].map($);
+      main();
 
-        const format = (zdt) =>
-          zdt.toLocaleString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-            timeZoneName: "short",
-          });
+      function main() {
+        if (typeof Temporal === "undefined") {
+          document.getElementById("unsupported").hidden = false;
+          return;
+        }
 
-        const update = () => {
-          const storeTz = $("storeTz").value;
-          const viewTz =
-            $("viewTz").value === "auto"
-              ? Temporal.Now.timeZoneId()
-              : $("viewTz").value;
+        const storeInput = document.getElementById("store");
+        const dateInput = document.getElementById("date");
+        const timeInput = document.getElementById("time");
+        const courseInput = document.getElementById("course");
+        const viewerInput = document.getElementById("viewer");
+        const outStore = document.getElementById("out-store");
+        const outBooking = document.getElementById("out-booking");
+        const outIso = document.getElementById("out-iso");
+        const outLocal = document.getElementById("out-local");
 
-          let day;
-          let start;
-          try {
-            day = Temporal.PlainDate.from($("date").value);
-            start = Temporal.PlainTime.from($("time").value);
-          } catch {
-            return; // do nothing while the input is incomplete
-          }
-
-          const minutes = Number($("duration").value);
-          const end = start.add({ minutes });
-          const duration = start.until(end);
-
-          const reserved = day.toZonedDateTime({ timeZone: storeTz, plainTime: start });
-          const view = reserved.withTimeZone(viewTz);
-
-          $("out-duration").textContent = `${duration.total("minutes")} min`;
-          $("out-reserved").textContent = format(reserved);
-          $("out-reserved-iso").textContent = reserved.toString();
-          $("out-view").textContent = format(view);
-          $("out-view-iso").textContent = view.toString();
-
-          $("code").textContent =
-            `const day = Temporal.PlainDate.from("${$("date").value}");\n` +
-            `const start = Temporal.PlainTime.from("${$("time").value}");\n` +
-            `const end = start.add({ minutes: ${minutes} });\n` +
-            `const duration = start.until(end); // ${duration.total("minutes")} min\n\n` +
-            `const reserved = day.toZonedDateTime({\n` +
-            `  timeZone: "${storeTz}",\n` +
-            `  plainTime: start,\n` +
-            `});\n` +
-            `// ${reserved.toString()}\n\n` +
-            `reserved.withTimeZone("${viewTz}").toString();\n` +
-            `// ${view.toString()}`;
+        const timeOptions = { hour: "numeric", minute: "2-digit" };
+        const fullOptions = {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZoneName: "short",
         };
 
-        for (const el of inputs) el.addEventListener("input", update);
+        function update() {
+          if (!dateInput.value || !timeInput.value) {
+            return;
+          }
+          const storeTz = storeInput.value;
+          const viewerTz =
+            viewerInput.value === "auto"
+              ? Temporal.Now.timeZoneId()
+              : viewerInput.value;
+
+          const day = Temporal.PlainDate.from(dateInput.value);
+          const start = Temporal.PlainTime.from(timeInput.value);
+          const end = start.add({ minutes: Number(courseInput.value) });
+
+          const reserved = day.toZonedDateTime({ timeZone: storeTz, plainTime: start });
+          const local = reserved.withTimeZone(viewerTz);
+
+          outStore.textContent = `${storeInput.selectedOptions[0].textContent} (${storeTz})`;
+          outBooking.textContent =
+            `${day.toLocaleString("en-US", { month: "short", day: "numeric" })} · ` +
+            `${start.toLocaleString("en-US", timeOptions)} – ${end.toLocaleString("en-US", timeOptions)}`;
+          outIso.textContent = reserved.toString();
+          outLocal.textContent = local.toLocaleString("en-US", fullOptions);
+        }
+
+        const inputs = [storeInput, dateInput, timeInput, courseInput, viewerInput];
+        for (const input of inputs) {
+          input.addEventListener("input", update);
+        }
         update();
       }
     </script>

@@ -36,9 +36,8 @@
 }
 
 body {
-  font-family:
-    "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans",
-    "Noto Sans JP", sans-serif;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans", "Noto Sans JP", sans-serif;
   line-height: 1.7;
   color: var(--text);
   background: var(--bg);
@@ -104,6 +103,16 @@ button {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
+}
+
+/* ネイティブの矢印は右端に張り付くため、date/timeのピッカーアイコンと右位置を揃えた自前の矢印にする */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.5l4 4 4-4' fill='none' stroke='%23888888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
 }
 
 button {

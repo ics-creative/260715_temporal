@@ -6,9 +6,9 @@ All demos are plain HTML/JS with no build step and use the native `Temporal` dir
 
 ## Demos
 
-- `docs/01_reservation/` — Date-time handling for a reservation system. Builds a confirmed date-time (`ZonedDateTime`) from a reservation date, start time, duration, and store time zone, then converts it to an overseas display time zone.
-- `docs/02_clock-instant/` — The contrast between a wall-clock face (`PlainDateTime`) and an exact point in time (`ZonedDateTime`). Shows a single instant across multiple cities at once.
-- `docs/03_dst/` — Adding time across a Daylight Saving Time (DST) transition. Shows how the calculation skips a non-existent time and lands correctly.
+- `docs/01_reservation/` — Salon reservation. Confirms a booking (`ZonedDateTime`) from a store, date, start time, and course, and converts it to the visitor's time zone.
+- `docs/02_clock-instant/` — World clock. Shows a single instant (`Temporal.Now.instant()`) as the local time of several cities, updating every second.
+- `docs/03_dst/` — Schedule. Shifts an event by hours and shows how `ZonedDateTime` handles a Daylight Saving Time transition.
 
 ## Running locally
 
