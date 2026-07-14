@@ -76,7 +76,7 @@ h1 {
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 24px;
   margin-bottom: 24px;
 }
@@ -99,7 +99,7 @@ button {
   color: inherit;
   padding: 9px 11px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--bg);
 }
 
@@ -158,7 +158,7 @@ pre {
   background: var(--code-bg);
   color: var(--code-text);
   padding: 16px 18px;
-  border-radius: 10px;
+  border-radius: 4px;
   overflow-x: auto;
   font-size: 14px;
   line-height: 1.6;
@@ -182,7 +182,7 @@ pre {
     color: inherit;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 20px 22px;
     transition: border-color 0.15s;
 

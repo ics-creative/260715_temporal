@@ -1,50 +1,195 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Salon reservation | Temporal demo</title>
     <link rel="stylesheet" href="../base.css" />
+    <style>
+      /* アロマサロン向けに、青のアクセントを落ち着いたセージグリーンへ上書き */
+      :root {
+        --accent: #4a7c59;
+        --accent-weak: #e8f1ec;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --accent: #86c69f;
+          --accent-weak: #22302a;
+        }
+      }
+
+      .store-hero {
+        position: relative;
+        background-image: url("./images/tokyo.jpg");
+        background-size: cover;
+        background-position: center;
+        color: #fff;
+        border-radius: 4px;
+        padding: 22px 24px;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+        overflow: hidden;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      }
+      .store-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .store-hero > * {
+        position: relative;
+      }
+      .store-hero h2 {
+        font-size: 22px;
+        margin-bottom: 6px;
+      }
+      .store-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .section-title {
+        font-weight: bold;
+        font-size: 15px;
+        margin-bottom: 10px;
+      }
+      .services {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+      .service {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .service[aria-pressed="true"] {
+        border-color: var(--accent);
+        background: var(--accent-weak);
+      }
+      .service .name {
+        font-weight: bold;
+      }
+      .service .dur {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .service .price {
+        font-variant-numeric: tabular-nums;
+        font-weight: bold;
+      }
+      .slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .slot {
+        background: var(--bg);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        min-width: 64px;
+      }
+      .slot[aria-pressed="true"] {
+        background: var(--accent);
+        color: #fff;
+      }
+      .receipt {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .receipt-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--accent-weak);
+        padding: 14px 18px;
+        font-weight: bold;
+        color: var(--accent);
+      }
+      /* hidden属性はSVG要素では表示に効かないため、明示的に隠す */
+      #check[hidden] {
+        display: none;
+      }
+      .receipt-body {
+        padding: 18px;
+      }
+      .receipt-body .result {
+        margin: 0;
+      }
+      .local-time {
+        margin-top: 14px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .local-time strong {
+        color: var(--text);
+      }
+      .confirm-btn {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        margin-top: 16px;
+      }
+    </style>
   </head>
   <body>
     <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
     <div class="wrap">
       <h1>Salon reservation</h1>
-      <p class="lead">The confirmed time works across time zones.</p>
+
+      <div class="store-hero">
+        <h2 id="store-name">Aroma Spa Tokyo</h2>
+        <div class="store-meta">
+          <span id="store-location">Shibuya, Tokyo</span>
+          <span id="store-tz">Asia/Tokyo</span>
+          <span>4.8 (128 reviews)</span>
+        </div>
+      </div>
 
       <p id="unsupported" class="note" hidden>
-        This browser does not support Temporal. Please use Chrome / Edge 144+ or Firefox 139+.
+        This browser does not support Temporal. Please use Chrome / Edge 144+ or
+        Firefox 139+.
       </p>
 
       <div class="panel">
         <div class="field">
           <label for="store">Store</label>
           <select id="store">
-            <option value="Asia/Tokyo" selected>Tokyo</option>
-            <option value="Europe/London">London</option>
-            <option value="America/New_York">New York</option>
+            <option value="Asia/Tokyo" selected>Aroma Spa Tokyo</option>
+            <option value="Europe/London">Aroma Spa London</option>
+            <option value="America/New_York">Aroma Spa New York</option>
           </select>
         </div>
         <div class="field">
           <label for="date">Date</label>
           <input type="date" id="date" value="2026-07-10" />
         </div>
+
+        <p class="section-title">Menu</p>
+        <div class="services" id="services"></div>
+
+        <p class="section-title">Available times</p>
+        <div class="slots" id="slots"></div>
+      </div>
+
+      <div class="panel">
         <div class="field">
-          <label for="time">Start</label>
-          <input type="time" id="time" value="14:00" />
-        </div>
-        <div class="field">
-          <label for="course">Course</label>
-          <select id="course">
-            <option value="60">Relax (60 min)</option>
-            <option value="90" selected>Standard (90 min)</option>
-            <option value="120">Premium (120 min)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="viewer">Your time zone</label>
+          <label for="viewer">Show times in</label>
           <select id="viewer">
-            <option value="auto" selected>Auto (your location)</option>
+            <option value="auto" selected>My time zone (auto)</option>
             <option value="Asia/Tokyo">Tokyo</option>
             <option value="America/New_York">New York</option>
             <option value="Europe/London">London</option>
@@ -52,17 +197,47 @@
         </div>
       </div>
 
-      <div class="panel">
-        <dl class="result">
-          <dt>Store</dt>
-          <dd id="out-store"></dd>
-          <dt>Booking</dt>
-          <dd id="out-booking" class="big"></dd>
-          <dt>Confirmed (ISO)</dt>
-          <dd id="out-iso" class="mono"></dd>
-          <dt>Your local time</dt>
-          <dd id="out-local"></dd>
-        </dl>
+      <div class="receipt" id="receipt" hidden>
+        <div class="receipt-head">
+          <svg
+            id="check"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            aria-hidden="true"
+            hidden
+          >
+            <circle cx="12" cy="12" r="11" fill="#1a9d6b" />
+            <path
+              d="M7 12.5l3 3 7-7"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span id="receipt-title">Review your booking</span>
+        </div>
+        <div class="receipt-body">
+          <dl class="result">
+            <dt>Store</dt>
+            <dd id="out-store"></dd>
+            <dt>Menu</dt>
+            <dd id="out-menu"></dd>
+            <dt>Date</dt>
+            <dd id="out-date"></dd>
+            <dt>Time</dt>
+            <dd id="out-time" class="big"></dd>
+          </dl>
+          <p class="local-time">
+            In your time zone: <strong id="out-local"></strong><br />
+            <span id="out-iso" class="mono"></span>
+          </p>
+          <button type="button" id="confirm" class="confirm-btn">
+            Confirm reservation
+          </button>
+        </div>
       </div>
     </div>
 
@@ -75,27 +250,81 @@
           return;
         }
 
+        const STORES = {
+          "Asia/Tokyo": {
+            name: "Aroma Spa Tokyo",
+            location: "Shibuya, Tokyo",
+            image: "tokyo.jpg"
+          },
+          "Europe/London": {
+            name: "Aroma Spa London",
+            location: "Soho, London",
+            image: "london.jpg"
+          },
+          "America/New_York": {
+            name: "Aroma Spa New York",
+            location: "SoHo, New York",
+            image: "newyork.jpg"
+          }
+        };
+        const MENU = [
+          { name: "Relax", minutes: 60, price: "¥6,000" },
+          { name: "Standard", minutes: 90, price: "¥9,000" },
+          { name: "Premium", minutes: 120, price: "¥12,000" }
+        ];
+        const SLOTS = ["10:00", "11:30", "13:00", "14:30", "16:00"];
+
         const storeInput = document.getElementById("store");
         const dateInput = document.getElementById("date");
-        const timeInput = document.getElementById("time");
-        const courseInput = document.getElementById("course");
         const viewerInput = document.getElementById("viewer");
+        const servicesBox = document.getElementById("services");
+        const slotsBox = document.getElementById("slots");
+        const storeHero = document.querySelector(".store-hero");
+        const confirmBtn = document.getElementById("confirm");
+        const check = document.getElementById("check");
+        const receiptTitle = document.getElementById("receipt-title");
+        const storeName = document.getElementById("store-name");
+        const storeLocation = document.getElementById("store-location");
+        const storeTzLabel = document.getElementById("store-tz");
+        const receipt = document.getElementById("receipt");
         const outStore = document.getElementById("out-store");
-        const outBooking = document.getElementById("out-booking");
-        const outIso = document.getElementById("out-iso");
+        const outMenu = document.getElementById("out-menu");
+        const outDate = document.getElementById("out-date");
+        const outTime = document.getElementById("out-time");
         const outLocal = document.getElementById("out-local");
+        const outIso = document.getElementById("out-iso");
 
         const timeOptions = { hour: "numeric", minute: "2-digit" };
+        const dateOptions = {
+          weekday: "short",
+          month: "short",
+          day: "numeric"
+        };
         const fullOptions = {
+          weekday: "short",
           month: "short",
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
-          timeZoneName: "short",
+          timeZoneName: "short"
         };
 
-        function update() {
-          if (!dateInput.value || !timeInput.value) {
+        let menuIndex = 1;
+        let selectedSlot = null;
+
+        function selectSlot(slot) {
+          selectedSlot = slot;
+          for (const button of slotsBox.children) {
+            button.setAttribute(
+              "aria-pressed",
+              String(button.textContent === slot)
+            );
+          }
+          showReview();
+        }
+
+        function fillDetails() {
+          if (!selectedSlot) {
             return;
           }
           const storeTz = storeInput.value;
@@ -103,27 +332,110 @@
             viewerInput.value === "auto"
               ? Temporal.Now.timeZoneId()
               : viewerInput.value;
+          const menu = MENU[menuIndex];
 
           const day = Temporal.PlainDate.from(dateInput.value);
-          const start = Temporal.PlainTime.from(timeInput.value);
-          const end = start.add({ minutes: Number(courseInput.value) });
+          const start = Temporal.PlainTime.from(selectedSlot);
+          const end = start.add({ minutes: menu.minutes });
 
-          const reserved = day.toZonedDateTime({ timeZone: storeTz, plainTime: start });
+          const reserved = day.toZonedDateTime({
+            timeZone: storeTz,
+            plainTime: start
+          });
           const local = reserved.withTimeZone(viewerTz);
 
-          outStore.textContent = `${storeInput.selectedOptions[0].textContent} (${storeTz})`;
-          outBooking.textContent =
-            `${day.toLocaleString("en-US", { month: "short", day: "numeric" })} · ` +
-            `${start.toLocaleString("en-US", timeOptions)} – ${end.toLocaleString("en-US", timeOptions)}`;
-          outIso.textContent = reserved.toString();
+          outStore.textContent = STORES[storeTz].name;
+          outMenu.textContent = `${menu.name} (${menu.minutes} min) · ${menu.price}`;
+          outDate.textContent = day.toLocaleString("en-US", dateOptions);
+          outTime.textContent = `${start.toLocaleString(
+            "en-US",
+            timeOptions
+          )} – ${end.toLocaleString("en-US", timeOptions)}`;
           outLocal.textContent = local.toLocaleString("en-US", fullOptions);
+          outIso.textContent = reserved.toString();
         }
 
-        const inputs = [storeInput, dateInput, timeInput, courseInput, viewerInput];
-        for (const input of inputs) {
-          input.addEventListener("input", update);
+        function showReview() {
+          fillDetails();
+          receiptTitle.textContent = "Review your booking";
+          check.toggleAttribute("hidden", true);
+          confirmBtn.hidden = false;
+          receipt.hidden = false;
         }
-        update();
+
+        function confirmReservation() {
+          if (!selectedSlot) {
+            return;
+          }
+          receiptTitle.textContent = "Reservation confirmed";
+          check.toggleAttribute("hidden", false);
+          confirmBtn.hidden = true;
+        }
+
+        function renderMenu() {
+          servicesBox.replaceChildren();
+          MENU.forEach((menu, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "service";
+            button.setAttribute("aria-pressed", String(index === menuIndex));
+            button.innerHTML =
+              `<span><span class="name">${menu.name}</span> <span class="dur">${menu.minutes} min</span></span>` +
+              `<span class="price">${menu.price}</span>`;
+            button.addEventListener("click", () => {
+              menuIndex = index;
+              renderMenu();
+              if (selectedSlot) {
+                showReview();
+              }
+            });
+            servicesBox.append(button);
+          });
+        }
+
+        function renderSlots() {
+          slotsBox.replaceChildren();
+          for (const slot of SLOTS) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "slot";
+            button.textContent = slot;
+            button.setAttribute("aria-pressed", "false");
+            button.addEventListener("click", () => selectSlot(slot));
+            slotsBox.append(button);
+          }
+        }
+
+        function updateStoreHero() {
+          const store = STORES[storeInput.value];
+          storeHero.style.backgroundImage = `url("./images/${store.image}")`;
+          storeName.textContent = store.name;
+          storeLocation.textContent = store.location;
+          storeTzLabel.textContent = storeInput.value;
+        }
+
+        function resetBooking() {
+          selectedSlot = null;
+          receipt.hidden = true;
+          confirmBtn.hidden = true;
+          renderSlots();
+        }
+
+        confirmBtn.addEventListener("click", confirmReservation);
+        storeInput.addEventListener("input", () => {
+          updateStoreHero();
+          resetBooking();
+        });
+        dateInput.addEventListener("input", resetBooking);
+        viewerInput.addEventListener("input", () => {
+          if (selectedSlot && !receipt.hidden) {
+            fillDetails();
+          }
+        });
+
+        updateStoreHero();
+        renderMenu();
+        renderSlots();
       }
     </script>
   </body>
