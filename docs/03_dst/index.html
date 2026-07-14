@@ -10,9 +10,6 @@
     <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
     <div class="wrap">
       <h1>Time difference</h1>
-      <p class="lead">
-        The gap between two cities can change through the year because of Daylight Saving Time.
-      </p>
 
       <p id="unsupported" class="note" hidden>
         This browser does not support Temporal. Please use Chrome / Edge 144+ or Firefox 139+.
@@ -31,7 +28,7 @@
           </select>
         </div>
         <div class="field">
-          <label for="cityB">Partner city</label>
+          <label for="cityB">Destination</label>
           <select id="cityB">
             <option value="Asia/Tokyo">Tokyo</option>
             <option value="Europe/London" selected>London</option>
@@ -51,12 +48,7 @@
         <dl class="result">
           <dt>Difference</dt>
           <dd id="out-diff" class="big"></dd>
-          <dt>At 12:00 in A</dt>
-          <dd id="out-at"></dd>
-          <dt>Offsets</dt>
-          <dd id="out-offsets" class="mono"></dd>
         </dl>
-        <p class="note" id="note"></p>
       </div>
     </div>
 
@@ -69,68 +61,53 @@
           return;
         }
 
-        const NOON = Temporal.PlainTime.from("12:00");
         const cityAInput = document.getElementById("cityA");
         const cityBInput = document.getElementById("cityB");
         const dateInput = document.getElementById("date");
         const outDiff = document.getElementById("out-diff");
-        const outAt = document.getElementById("out-at");
-        const outOffsets = document.getElementById("out-offsets");
-        const note = document.getElementById("note");
 
-        // A の正午を基準に、同じ瞬間の A と B のオフセット差（時間）を返す
+        // A基準で、同じ瞬間をBで見たときのオフセット差（時間）を返す
         function diffHours(dateStr, tzA, tzB) {
           const atA = Temporal.PlainDate.from(dateStr).toZonedDateTime({
             timeZone: tzA,
-            plainTime: NOON,
+            plainTime: Temporal.PlainTime.from("12:00"),
           });
           const atB = atA.withTimeZone(tzB);
           return (atA.offsetNanoseconds - atB.offsetNanoseconds) / 3_600_000_000_000;
         }
 
-        function label(select) {
-          return select.selectedOptions[0].textContent;
-        }
-
-        function gapText(hours, nameA, nameB) {
-          if (hours === 0) {
-            return `${nameA} and ${nameB} share the same time`;
+        // その日付にサマータイムが適用されているか
+        function inDST(dateStr, tz) {
+          const year = Temporal.PlainDate.from(dateStr).year;
+          const winter = diffHours(`${year}-01-15`, tz, "UTC");
+          const summer = diffHours(`${year}-07-15`, tz, "UTC");
+          if (winter === summer) {
+            return false;
           }
-          const dir = hours > 0 ? "ahead of" : "behind";
-          return `${nameA} is ${Math.abs(hours)} hours ${dir} ${nameB}`;
+          return diffHours(dateStr, tz, "UTC") === Math.max(winter, summer);
         }
 
         function update() {
           if (!dateInput.value) {
             return;
           }
-          const tzA = cityAInput.value;
-          const tzB = cityBInput.value;
-          const nameA = label(cityAInput);
-          const nameB = label(cityBInput);
+          const yourTz = cityAInput.value;
+          const destTz = cityBInput.value;
+          const date = dateInput.value;
 
-          const atA = Temporal.PlainDate.from(dateInput.value).toZonedDateTime({
-            timeZone: tzA,
-            plainTime: NOON,
-          });
-          const atB = atA.withTimeZone(tzB);
-          const hours =
-            (atA.offsetNanoseconds - atB.offsetNanoseconds) / 3_600_000_000_000;
-
-          outDiff.textContent = gapText(hours, nameA, nameB);
-          outAt.textContent = `12:00 in ${nameA} = ${atB.toLocaleString("en-US", { hour: "numeric", minute: "2-digit" })} in ${nameB}`;
-          outOffsets.textContent = `${nameA} UTC${atA.offset} / ${nameB} UTC${atB.offset}`;
-
-          const year = Temporal.PlainDate.from(dateInput.value).year;
-          const summer = diffHours(`${year}-07-01`, tzA, tzB);
-          const winter = diffHours(`${year}-01-01`, tzA, tzB);
-          if (summer === winter) {
-            note.textContent =
-              "Neither city observes Daylight Saving Time on these dates, so the gap stays the same all year.";
-          } else {
-            note.textContent =
-              `Because of Daylight Saving Time, the gap changes through the year: ${Math.abs(summer)} hours around July and ${Math.abs(winter)} hours around January.`;
+          // 目的地が自分の都市より何時間ずれているか
+          const hours = diffHours(date, destTz, yourTz);
+          if (hours === 0) {
+            outDiff.textContent = "Same time";
+            return;
           }
+          const sign = hours >= 0 ? "+" : "−";
+          const unit = Math.abs(hours) === 1 ? "hour" : "hours";
+          const dst = inDST(date, yourTz) || inDST(date, destTz);
+
+          outDiff.textContent =
+            `${sign} ${Math.abs(hours)} ${unit}` +
+            (dst ? " (Daylight Saving Time)" : "");
         }
 
         cityAInput.addEventListener("input", update);
