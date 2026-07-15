@@ -168,19 +168,20 @@
           day: "numeric"
         };
 
-        // その日時がサマータイム中かを、年内の2つのオフセットの大きい方と一致するかで判定する
+        // 年内の1月と7月のオフセットを比べ、大きい方に一致すればDST中と判定する。
+        // 掲載都市はいずれも正のDST（夏に前倒し）で成立する。負のDSTを持つゾーンでは判定が逆になる
         function isSummerTime(zdt) {
           const year = zdt.year;
-          const winter = Temporal.PlainDate.from(
+          const offsetJan = Temporal.PlainDate.from(
             `${year}-01-15`
           ).toZonedDateTime(zdt.timeZoneId).offsetNanoseconds;
-          const summer = Temporal.PlainDate.from(
+          const offsetJul = Temporal.PlainDate.from(
             `${year}-07-15`
           ).toZonedDateTime(zdt.timeZoneId).offsetNanoseconds;
-          if (winter === summer) {
+          if (offsetJan === offsetJul) {
             return false;
           }
-          return zdt.offsetNanoseconds === Math.max(winter, summer);
+          return zdt.offsetNanoseconds === Math.max(offsetJan, offsetJul);
         }
 
         function tick() {

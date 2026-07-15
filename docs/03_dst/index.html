@@ -78,15 +78,16 @@
           );
         }
 
-        // その日付にサマータイムが適用されているか
+        // その日付にサマータイムが適用されているか。
+        // 1月と7月のオフセットの大きい方をDSTとみなす（掲載都市はすべて正のDST）
         function inDST(dateStr, tz) {
           const year = Temporal.PlainDate.from(dateStr).year;
-          const winter = diffHours(`${year}-01-15`, tz, "UTC");
-          const summer = diffHours(`${year}-07-15`, tz, "UTC");
-          if (winter === summer) {
+          const offsetJan = diffHours(`${year}-01-15`, tz, "UTC");
+          const offsetJul = diffHours(`${year}-07-15`, tz, "UTC");
+          if (offsetJan === offsetJul) {
             return false;
           }
-          return diffHours(dateStr, tz, "UTC") === Math.max(winter, summer);
+          return diffHours(dateStr, tz, "UTC") === Math.max(offsetJan, offsetJul);
         }
 
         function update() {

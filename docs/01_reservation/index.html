@@ -177,8 +177,13 @@
           <input type="date" id="date" value="2026-07-10" />
         </div>
 
-        <p class="section-title">Menu</p>
-        <div class="services" id="services">
+        <p class="section-title" id="menu-label">Menu</p>
+        <div
+          class="services"
+          id="services"
+          role="group"
+          aria-labelledby="menu-label"
+        >
           <button
             type="button"
             class="service"
@@ -220,8 +225,13 @@
           </button>
         </div>
 
-        <p class="section-title">Available times</p>
-        <div class="slots" id="slots">
+        <p class="section-title" id="slots-label">Available times</p>
+        <div
+          class="slots"
+          id="slots"
+          role="group"
+          aria-labelledby="slots-label"
+        >
           <button type="button" class="slot" aria-pressed="false">10:00</button>
           <button type="button" class="slot" aria-pressed="false">11:30</button>
           <button type="button" class="slot" aria-pressed="false">13:00</button>
@@ -264,7 +274,7 @@
           </svg>
           <span id="receipt-title">Review your booking</span>
         </div>
-        <div class="receipt-body">
+        <div class="receipt-body" aria-live="polite">
           <dl class="result">
             <dt>Store</dt>
             <dd id="out-store"></dd>
