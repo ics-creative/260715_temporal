@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -74,15 +74,16 @@
     </style>
   </head>
   <body>
-    <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
     <div class="wrap">
       <h1>World clock</h1>
       <p class="lead">
-        The current time around the world. Cities on summer time (DST) are marked.
+        The current time around the world. Cities on summer time (DST) are
+        marked.
       </p>
 
       <p id="unsupported" class="note" hidden>
-        This browser does not support Temporal. Please use Chrome / Edge 144+ or Firefox 139+.
+        This browser does not support Temporal. Please use Chrome / Edge 144+ or
+        Firefox 139+.
       </p>
 
       <div class="worldclock">
@@ -159,19 +160,23 @@
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
-          hour12: false,
+          hour12: false
         };
-        const dateOptions = { weekday: "short", month: "short", day: "numeric" };
+        const dateOptions = {
+          weekday: "short",
+          month: "short",
+          day: "numeric"
+        };
 
         // その日時がサマータイム中かを、年内の2つのオフセットの大きい方と一致するかで判定する
         function isSummerTime(zdt) {
           const year = zdt.year;
-          const winter = Temporal.PlainDate.from(`${year}-01-15`).toZonedDateTime(
-            zdt.timeZoneId
-          ).offsetNanoseconds;
-          const summer = Temporal.PlainDate.from(`${year}-07-15`).toZonedDateTime(
-            zdt.timeZoneId
-          ).offsetNanoseconds;
+          const winter = Temporal.PlainDate.from(
+            `${year}-01-15`
+          ).toZonedDateTime(zdt.timeZoneId).offsetNanoseconds;
+          const summer = Temporal.PlainDate.from(
+            `${year}-07-15`
+          ).toZonedDateTime(zdt.timeZoneId).offsetNanoseconds;
           if (winter === summer) {
             return false;
           }
@@ -190,11 +195,12 @@
               "en-US",
               dateOptions
             );
-            card.querySelector(".clock-offset").textContent = `UTC${zdt.offset}`;
-            card.querySelector(".dst-badge").toggleAttribute(
-              "hidden",
-              !isSummerTime(zdt)
-            );
+            card.querySelector(
+              ".clock-offset"
+            ).textContent = `UTC${zdt.offset}`;
+            card
+              .querySelector(".dst-badge")
+              .toggleAttribute("hidden", !isSummerTime(zdt));
           }
         }
 
@@ -202,5 +208,6 @@
         setInterval(tick, 1000);
       }
     </script>
+    <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
   </body>
 </html>

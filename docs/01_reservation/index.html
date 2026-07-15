@@ -146,7 +146,6 @@
     </style>
   </head>
   <body>
-    <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
     <div class="wrap">
       <h1>Salon reservation</h1>
 
@@ -179,10 +178,56 @@
         </div>
 
         <p class="section-title">Menu</p>
-        <div class="services" id="services"></div>
+        <div class="services" id="services">
+          <button
+            type="button"
+            class="service"
+            data-minutes="60"
+            data-price="¥6,000"
+            aria-pressed="false"
+          >
+            <span
+              ><span class="name">Relax</span>
+              <span class="dur">60 min</span></span
+            >
+            <span class="price">¥6,000</span>
+          </button>
+          <button
+            type="button"
+            class="service"
+            data-minutes="90"
+            data-price="¥9,000"
+            aria-pressed="true"
+          >
+            <span
+              ><span class="name">Standard</span>
+              <span class="dur">90 min</span></span
+            >
+            <span class="price">¥9,000</span>
+          </button>
+          <button
+            type="button"
+            class="service"
+            data-minutes="120"
+            data-price="¥12,000"
+            aria-pressed="false"
+          >
+            <span
+              ><span class="name">Premium</span>
+              <span class="dur">120 min</span></span
+            >
+            <span class="price">¥12,000</span>
+          </button>
+        </div>
 
         <p class="section-title">Available times</p>
-        <div class="slots" id="slots"></div>
+        <div class="slots" id="slots">
+          <button type="button" class="slot" aria-pressed="false">10:00</button>
+          <button type="button" class="slot" aria-pressed="false">11:30</button>
+          <button type="button" class="slot" aria-pressed="false">13:00</button>
+          <button type="button" class="slot" aria-pressed="false">14:30</button>
+          <button type="button" class="slot" aria-pressed="false">16:00</button>
+        </div>
       </div>
 
       <div class="panel">
@@ -267,18 +312,11 @@
             image: "newyork.jpg"
           }
         };
-        const MENU = [
-          { name: "Relax", minutes: 60, price: "¥6,000" },
-          { name: "Standard", minutes: 90, price: "¥9,000" },
-          { name: "Premium", minutes: 120, price: "¥12,000" }
-        ];
-        const SLOTS = ["10:00", "11:30", "13:00", "14:30", "16:00"];
-
         const storeInput = document.getElementById("store");
         const dateInput = document.getElementById("date");
         const viewerInput = document.getElementById("viewer");
-        const servicesBox = document.getElementById("services");
-        const slotsBox = document.getElementById("slots");
+        const serviceButtons = document.querySelectorAll(".service");
+        const slotButtons = document.querySelectorAll(".slot");
         const storeHero = document.querySelector(".store-hero");
         const confirmBtn = document.getElementById("confirm");
         const check = document.getElementById("check");
@@ -309,16 +347,15 @@
           timeZoneName: "short"
         };
 
-        let menuIndex = 1;
+        let selectedService = document.querySelector(
+          '.service[aria-pressed="true"]'
+        );
         let selectedSlot = null;
 
-        function selectSlot(slot) {
-          selectedSlot = slot;
-          for (const button of slotsBox.children) {
-            button.setAttribute(
-              "aria-pressed",
-              String(button.textContent === slot)
-            );
+        function selectSlot(button) {
+          selectedSlot = button.textContent;
+          for (const other of slotButtons) {
+            other.setAttribute("aria-pressed", String(other === button));
           }
           showReview();
         }
@@ -332,11 +369,13 @@
             viewerInput.value === "auto"
               ? Temporal.Now.timeZoneId()
               : viewerInput.value;
-          const menu = MENU[menuIndex];
+          const menuName = selectedService.querySelector(".name").textContent;
+          const minutes = Number(selectedService.dataset.minutes);
+          const price = selectedService.dataset.price;
 
           const day = Temporal.PlainDate.from(dateInput.value);
           const start = Temporal.PlainTime.from(selectedSlot);
-          const end = start.add({ minutes: menu.minutes });
+          const end = start.add({ minutes });
 
           const reserved = day.toZonedDateTime({
             timeZone: storeTz,
@@ -345,7 +384,7 @@
           const local = reserved.withTimeZone(viewerTz);
 
           outStore.textContent = STORES[storeTz].name;
-          outMenu.textContent = `${menu.name} (${menu.minutes} min) · ${menu.price}`;
+          outMenu.textContent = `${menuName} (${minutes} min) · ${price}`;
           outDate.textContent = day.toLocaleString("en-US", dateOptions);
           outTime.textContent = `${start.toLocaleString(
             "en-US",
@@ -372,37 +411,13 @@
           confirmBtn.hidden = true;
         }
 
-        function renderMenu() {
-          servicesBox.replaceChildren();
-          MENU.forEach((menu, index) => {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "service";
-            button.setAttribute("aria-pressed", String(index === menuIndex));
-            button.innerHTML =
-              `<span><span class="name">${menu.name}</span> <span class="dur">${menu.minutes} min</span></span>` +
-              `<span class="price">${menu.price}</span>`;
-            button.addEventListener("click", () => {
-              menuIndex = index;
-              renderMenu();
-              if (selectedSlot) {
-                showReview();
-              }
-            });
-            servicesBox.append(button);
-          });
-        }
-
-        function renderSlots() {
-          slotsBox.replaceChildren();
-          for (const slot of SLOTS) {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "slot";
-            button.textContent = slot;
-            button.setAttribute("aria-pressed", "false");
-            button.addEventListener("click", () => selectSlot(slot));
-            slotsBox.append(button);
+        function selectService(button) {
+          selectedService = button;
+          for (const other of serviceButtons) {
+            other.setAttribute("aria-pressed", String(other === button));
+          }
+          if (selectedSlot) {
+            showReview();
           }
         }
 
@@ -418,9 +433,17 @@
           selectedSlot = null;
           receipt.hidden = true;
           confirmBtn.hidden = true;
-          renderSlots();
+          for (const button of slotButtons) {
+            button.setAttribute("aria-pressed", "false");
+          }
         }
 
+        for (const button of serviceButtons) {
+          button.addEventListener("click", () => selectService(button));
+        }
+        for (const button of slotButtons) {
+          button.addEventListener("click", () => selectSlot(button));
+        }
         confirmBtn.addEventListener("click", confirmReservation);
         storeInput.addEventListener("input", () => {
           updateStoreHero();
@@ -434,9 +457,8 @@
         });
 
         updateStoreHero();
-        renderMenu();
-        renderSlots();
       }
     </script>
+    <nav class="site-nav"><a href="../">&larr; All demos</a></nav>
   </body>
 </html>
