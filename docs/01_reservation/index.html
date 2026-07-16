@@ -18,6 +18,15 @@
         }
       }
 
+      /* 埋め込み時の縦幅を抑えるため、余白を詰める */
+      .panel {
+        padding: 16px 18px;
+        margin-bottom: 16px;
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+
       .store-hero {
         position: relative;
         background-image: url("./images/tokyo.jpg");
@@ -25,12 +34,12 @@
         background-position: center;
         color: #fff;
         border-radius: 4px;
-        padding: 22px 24px;
-        min-height: 160px;
+        padding: 16px 20px;
+        min-height: 104px;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         overflow: hidden;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
       }
@@ -61,15 +70,16 @@
       }
       .services {
         display: grid;
-        gap: 10px;
-        margin-bottom: 22px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
       }
       .service {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
         align-items: center;
-        text-align: left;
-        padding: 12px 16px;
+        gap: 2px;
+        padding: 10px 12px;
         border: 1px solid var(--border);
         border-radius: 4px;
         background: var(--bg);
@@ -82,13 +92,10 @@
       .service .name {
         font-weight: bold;
       }
-      .service .dur {
-        color: var(--muted);
-        font-size: 13px;
-      }
       .service .price {
         font-variant-numeric: tabular-nums;
-        font-weight: bold;
+        font-size: 13px;
+        color: var(--muted);
       }
       .slots {
         display: flex;
@@ -152,9 +159,7 @@
       <div class="store-hero">
         <h2 id="store-name">Aroma Spa Tokyo</h2>
         <div class="store-meta">
-          <span id="store-location">Shibuya, Tokyo</span>
           <span id="store-tz">Asia/Tokyo</span>
-          <span>4.8 (128 reviews)</span>
         </div>
       </div>
 
@@ -177,50 +182,23 @@
           <input type="date" id="date" value="2026-07-10" />
         </div>
 
-        <p class="section-title" id="menu-label">Menu</p>
+        <p class="section-title" id="menu-label">Duration</p>
         <div
           class="services"
           id="services"
           role="group"
           aria-labelledby="menu-label"
         >
-          <button
-            type="button"
-            class="service"
-            data-minutes="60"
-            data-price="¥6,000"
-            aria-pressed="false"
-          >
-            <span
-              ><span class="name">Relax</span>
-              <span class="dur">60 min</span></span
-            >
+          <button type="button" class="service" data-minutes="60" aria-pressed="false">
+            <span class="name">60 min</span>
             <span class="price">¥6,000</span>
           </button>
-          <button
-            type="button"
-            class="service"
-            data-minutes="90"
-            data-price="¥9,000"
-            aria-pressed="true"
-          >
-            <span
-              ><span class="name">Standard</span>
-              <span class="dur">90 min</span></span
-            >
+          <button type="button" class="service" data-minutes="90" aria-pressed="true">
+            <span class="name">90 min</span>
             <span class="price">¥9,000</span>
           </button>
-          <button
-            type="button"
-            class="service"
-            data-minutes="120"
-            data-price="¥12,000"
-            aria-pressed="false"
-          >
-            <span
-              ><span class="name">Premium</span>
-              <span class="dur">120 min</span></span
-            >
+          <button type="button" class="service" data-minutes="120" aria-pressed="false">
+            <span class="name">120 min</span>
             <span class="price">¥12,000</span>
           </button>
         </div>
@@ -238,11 +216,9 @@
           <button type="button" class="slot" aria-pressed="false">14:30</button>
           <button type="button" class="slot" aria-pressed="false">16:00</button>
         </div>
-      </div>
 
-      <div class="panel">
+        <p class="section-title">Show times in</p>
         <div class="field">
-          <label for="viewer">Show times in</label>
           <select id="viewer">
             <option value="auto" selected>My time zone (auto)</option>
             <option value="Asia/Tokyo">Tokyo</option>
@@ -278,7 +254,7 @@
           <dl class="result">
             <dt>Store</dt>
             <dd id="out-store"></dd>
-            <dt>Menu</dt>
+            <dt>Duration</dt>
             <dd id="out-menu"></dd>
             <dt>Date</dt>
             <dd id="out-date"></dd>
@@ -306,21 +282,9 @@
         }
 
         const STORES = {
-          "Asia/Tokyo": {
-            name: "Aroma Spa Tokyo",
-            location: "Shibuya, Tokyo",
-            image: "tokyo.jpg"
-          },
-          "Europe/London": {
-            name: "Aroma Spa London",
-            location: "Soho, London",
-            image: "london.jpg"
-          },
-          "America/New_York": {
-            name: "Aroma Spa New York",
-            location: "SoHo, New York",
-            image: "newyork.jpg"
-          }
+          "Asia/Tokyo": { name: "Aroma Spa Tokyo", image: "tokyo.jpg" },
+          "Europe/London": { name: "Aroma Spa London", image: "london.jpg" },
+          "America/New_York": { name: "Aroma Spa New York", image: "newyork.jpg" }
         };
         const storeInput = document.getElementById("store");
         const dateInput = document.getElementById("date");
@@ -332,7 +296,6 @@
         const check = document.getElementById("check");
         const receiptTitle = document.getElementById("receipt-title");
         const storeName = document.getElementById("store-name");
-        const storeLocation = document.getElementById("store-location");
         const storeTzLabel = document.getElementById("store-tz");
         const receipt = document.getElementById("receipt");
         const outStore = document.getElementById("out-store");
@@ -379,9 +342,7 @@
             viewerInput.value === "auto"
               ? Temporal.Now.timeZoneId()
               : viewerInput.value;
-          const menuName = selectedService.querySelector(".name").textContent;
           const minutes = Number(selectedService.dataset.minutes);
-          const price = selectedService.dataset.price;
 
           const day = Temporal.PlainDate.from(dateInput.value);
           const start = Temporal.PlainTime.from(selectedSlot);
@@ -394,7 +355,7 @@
           const local = reserved.withTimeZone(viewerTz);
 
           outStore.textContent = STORES[storeTz].name;
-          outMenu.textContent = `${menuName} (${minutes} min) · ${price}`;
+          outMenu.textContent = `${minutes} min`;
           outDate.textContent = day.toLocaleString("en-US", dateOptions);
           outTime.textContent = `${start.toLocaleString(
             "en-US",
@@ -435,7 +396,6 @@
           const store = STORES[storeInput.value];
           storeHero.style.backgroundImage = `url("./images/${store.image}")`;
           storeName.textContent = store.name;
-          storeLocation.textContent = store.location;
           storeTzLabel.textContent = storeInput.value;
         }
 
